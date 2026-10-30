@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#120c08">
+<title>Prens</title>
+<!--CDN-CSS--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/js-dos@8.5.3/dist/js-dos.css"><!--/CDN-CSS-->
+<style>
+:root{
+  --bg:#120c08; --panel:#21160e; --line:#5a3b1d; --gold:#e8b44a; --gold2:#ffd77a;
+  --text:#f3e6cc; --muted:#b39b78; --btn:#2e1f12; --btnOn:#6b4a1c; --red:#c0503a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{overflow:hidden;overscroll-behavior:none}
+button{font:inherit;color:inherit}
+
+/* ---------- giriş ekranı ---------- */
+#giris{position:fixed;inset:0;display:flex;flex-direction:column;overflow-y:auto;padding:16px;z-index:20;
+  background:radial-gradient(ellipse at 50% 0%,#3a2410 0%,var(--bg) 70%)}
+#giris .kart{margin:auto;max-width:560px;width:100%;background:var(--panel);border:2px solid var(--line);
+  border-radius:16px;padding:22px 20px;box-shadow:0 10px 40px #0008;text-align:center}
+#giris h1{margin:0 0 4px;font-size:clamp(28px,7vw,44px);letter-spacing:2px;color:var(--gold2);
+  font-family:Georgia,"Times New Roman",serif;text-shadow:0 2px 0 #000,0 0 18px #e8b44a55}
+#giris .alt{margin:0 0 18px;color:var(--muted);font-size:15px}
+#giris p{line-height:1.45;margin:10px 0}
+.buyukDugme{display:block;width:100%;margin:10px 0;padding:16px 14px;border-radius:12px;cursor:pointer;
+  border:2px solid var(--gold);background:linear-gradient(#7a5420,#4d3312);font-size:19px;font-weight:700;
+  color:#fff7e2}
+.buyukDugme:hover{filter:brightness(1.12)}
+.ikinciDugme{background:var(--btn);border-color:var(--line);font-size:16px;font-weight:600}
+.kucukYazi{font-size:13px;color:var(--muted)}
+#durum{min-height:22px;font-size:15px;color:var(--gold)}
+#durum.hata{color:#ff8a70}
+#giris details{text-align:left;margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+#giris summary{cursor:pointer;color:var(--gold);font-weight:600}
+#giris table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+#giris td{padding:4px 6px;border-bottom:1px solid #3a2716;vertical-align:top}
+#giris td:first-child{white-space:nowrap;color:var(--gold2);font-weight:600}
+input[type=file]{display:none}
+
+/* ---------- oyun ekranı ---------- */
+#oyun{position:fixed;inset:0;display:none;flex-direction:column;background:#000}
+#oyun.acik{display:flex}
+#ustBar{display:flex;gap:6px;align-items:center;padding:6px 8px;background:var(--panel);
+  border-bottom:1px solid var(--line);flex:0 0 auto;overflow-x:auto;scrollbar-width:none}
+#ustBar::-webkit-scrollbar{display:none}
+#ustBar button{flex:0 0 auto;padding:7px 10px;border-radius:9px;border:1px solid var(--line);
+  background:var(--btn);font-size:14px;cursor:pointer;white-space:nowrap;touch-action:manipulation}
+#ustBar button:active,#ustBar button.basili{background:var(--btnOn)}
+#ustBar .bosluk{flex:1 1 auto}
+@media (max-width:640px){#ustBar span{display:none} #ustBar button{padding:7px 11px;font-size:17px}}
+#sahne{position:relative;flex:1 1 auto;min-height:0;display:flex}
+#ekranKutu{position:relative;flex:1 1 auto;min-width:0;min-height:0}
+#dos{position:absolute;inset:0}
+#dos .jsdos-rso{background:#000}
+#bildirim{position:absolute;left:50%;top:10px;transform:translateX(-50%);padding:8px 14px;border-radius:10px;
+  background:#000c;border:1px solid var(--gold);color:var(--gold2);font-size:15px;pointer-events:none;
+  opacity:0;transition:opacity .25s;z-index:5;width:max-content;max-width:calc(100% - 24px);text-align:center;line-height:1.35}
+#bildirim.goster{opacity:1}
+
+#kodPencere{position:absolute;inset:0;z-index:8;background:#000b;display:flex;flex-direction:column;overflow:auto;padding:10px}
+#kodPencere[hidden]{display:none}
+.kodIc{margin:auto;max-width:640px;width:100%;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:12px}
+.kodBas{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--gold2)}
+.kodBas button{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--btn);cursor:pointer}
+#kodMetin{margin:6px 0 0;font:12px/1.35 ui-monospace,Consolas,monospace;white-space:pre;overflow:auto;color:var(--text)}
+/* dokunmatik tuşlar */
+.pad{display:none;touch-action:none;user-select:none;-webkit-user-select:none}
+body.dokunmatik .pad{display:flex}
+.tus{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border-radius:14px;
+  background:#2e1f12d9;border:2px solid #7a5420;color:var(--gold2);font-weight:800;touch-action:none;
+  user-select:none;-webkit-user-select:none;font-size:22px}
+.tus.basili{background:#8a5f22;border-color:var(--gold2);color:#fff}
+.tus small{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
+.tus.basili small{color:#fff}
+#yonPad{display:none;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:6px}
+body.dokunmatik #yonPad{display:grid}
+#yonPad .orta{background:transparent;border:2px dashed #5a3b1d;color:#5a3b1d;font-size:12px}
+#eylemPad{flex-direction:column;gap:10px;align-items:stretch;justify-content:center}
+#eylemPad .tus{flex:1 1 0}
+#tusShift{font-size:20px}
+
+/* yatay: tuşlar oyunun iki yanında */
+@media (orientation:landscape){
+  #sahne{flex-direction:row}
+  body.dokunmatik #yonPad{order:0;flex:0 0 auto;width:min(30vw,250px);height:min(30vw,250px);
+    align-self:flex-end;margin:8px}
+  #ekranKutu{order:1}
+  body.dokunmatik #eylemPad{order:2;flex:0 0 auto;width:min(18vw,150px);height:min(34vw,240px);
+    align-self:flex-end;margin:8px}
+}
+/* dikey: oyun üstte, tuşlar altta */
+@media (orientation:portrait){
+  #sahne{flex-direction:column}
+  #ekranKutu{flex:0 0 auto;height:calc(100vw * 0.75);max-height:60vh}
+  #altPanel{flex:1 1 auto;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;gap:14px;min-height:0}
+  body.dokunmatik #yonPad{width:min(56vw,260px);height:min(56vw,260px)}
+  body.dokunmatik #eylemPad{width:min(30vw,140px);height:min(48vw,230px)}
+}
+@media (orientation:landscape){ #altPanel{display:contents} }
+body:not(.dokunmatik) #altPanel{display:none}
+</style>
+</head>
+<body>
+
+<section id="giris">
+  <div class="kart">
+    <h1>PRENS</h1>
+    <p class="alt">Prince of Persia (1990, DOS) · tarayıcıda</p>
+
+    <div id="hazirKutu" hidden>
+      <button class="buyukDugme" id="basla">▶ Oyunu başlat</button>
+      <p class="kucukYazi" id="kayitBilgi"></p>
+      <button class="buyukDugme ikinciDugme" id="degistir">Oyun dosyalarını değiştir</button>
+    </div>
+
+    <div id="secKutu" hidden>
+      <p>Oyunun dosyaları bu sitede yok. Kendi kopyanı <b>bir kez</b> seç, bu cihazda saklanır ve sonra doğrudan açılır.</p>
+      <button class="buyukDugme" id="zipSec">📦 pr1.zip dosyasını seç</button>
+      <button class="buyukDugme ikinciDugme" id="klasorSec">📁 Ya da oyun klasörünü seç</button>
+      <input type="file" id="zipInput" accept=".zip,application/zip">
+      <input type="file" id="klasorInput" webkitdirectory multiple>
+      <p class="kucukYazi">İçinde PRINCE.EXE ve .DAT dosyaları olmalı.</p>
+    </div>
+
+    <p id="durum"></p>
+
+    <details>
+      <summary>Tuşlar</summary>
+      <table>
+        <tr><td>← →</td><td>Koş. Shift ile birlikte basarsan adım adım yürür.</td></tr>
+        <tr><td>↑</td><td>Zıpla, tutun ve tırman. Kılıçta savun.</td></tr>
+        <tr><td>↓</td><td>Eğil, kenardan aşağı sarkıl. Kılıcı kınına koy.</td></tr>
+        <tr><td>↑ + ← / →</td><td>İleri doğru uzun atla.</td></tr>
+        <tr><td>Shift</td><td>Kenara tutun, eşya al, iksir iç, kılıçla vur.</td></tr>
+        <tr><td>Boşluk</td><td>Kalan süreyi göster.</td></tr>
+        <tr><td>Ctrl+A</td><td>Bölümü baştan başlat.</td></tr>
+        <tr><td>💾 Kaydet</td><td>Oyunu kaydet (Ctrl+G). Oyun 3. bölümden itibaren kayıt alır.</td></tr>
+        <tr><td>📂 Yükle</td><td>Kayıtlı oyuna dön. Önce iksir sorusu gelir, 📜 Kodlar tablosundan harfi bul.</td></tr>
+        <tr><td>Esc</td><td>Duraklat.</td></tr>
+      </table>
+      <p class="kucukYazi">Dokunmatik ekranda bu tuşlar ekranda çıkar. Kayıt dosyası bu cihazda saklanır.</p>
+    </details>
+  </div>
+</section>
+
+<section id="oyun">
+  <div id="ustBar">
+    <button id="bGeri" title="Ana ekran">⏏<span> Çık</span></button>
+    <button data-tus="esc" title="Duraklat (Esc)">⏸<span> Duraklat</span></button>
+    <button data-tus="space" title="Kalan süre (Boşluk)">⏱<span> Süre</span></button>
+    <button data-kombo="ctrl+a" title="Bölümü baştan başlat (Ctrl+A)">↺<span> Bölüm başı</span></button>
+    <button data-kombo="ctrl+g" title="Kaydet (Ctrl+G)">💾<span> Kaydet</span></button>
+    <button data-kombo="ctrl+l" title="Kayıtlı oyunu yükle">📂<span> Yükle</span></button>
+    <button data-tus="enter" title="Enter">↵<span> Enter</span></button>
+    <button id="bKod" title="Kılavuz kodları (TIPS.TXT)" hidden>📜<span> Kodlar</span></button>
+    <span class="bosluk"></span>
+    <button id="bDokun" title="Ekran tuşlarını aç/kapat">🎮<span> Tuşlar</span></button>
+    <button id="bTam" title="Tam ekran">⛶</button>
+  </div>
+  <div id="sahne">
+    <div id="ekranKutu"><div id="dos"></div><div id="bildirim"></div></div>
+    <div id="kodPencere" hidden><div class="kodIc"><div class="kodBas"><b>📜 Kılavuz kodları</b><button id="kodKapat">✕ Kapat</button></div><p class="kucukYazi">İksir odasında istenen kelimenin ilk harfini bu tabloda bul. Kaynak: senin TIPS.TXT dosyan.</p><pre id="kodMetin"></pre></div></div>
+    <div id="altPanel">
+      <div class="pad" id="yonPad">
+        <div class="tus" data-yon="ul">↖</div>
+        <div class="tus" data-yon="u">↑</div>
+        <div class="tus" data-yon="ur">↗</div>
+        <div class="tus" data-yon="l">←</div>
+        <div class="tus orta" data-yon="">·</div>
+        <div class="tus" data-yon="r">→</div>
+        <div class="tus" data-yon="dl">↙</div>
+        <div class="tus" data-yon="d">↓</div>
+        <div class="tus" data-yon="dr">↘</div>
+      </div>
+      <div class="pad" id="eylemPad">
+        <div class="tus" id="tusShift">SHIFT<small>tutun · vur · al</small></div>
+        <div class="tus" id="tusYuru">ADIM<small>Shift + yön</small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!--CDN-JS--><script src="https://cdn.jsdelivr.net/npm/js-dos@8.5.3/dist/js-dos.js"></script><!--/CDN-JS-->
+<!--GOMULU-->
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+
+/* ================= IndexedDB ================= */
+const DB_AD = "prens-oyun", DEPO = "veri";
+function dbAc(){
+  return new Promise((ok, red) => {
+    const r = indexedDB.open(DB_AD, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(DEPO);
+    r.onsuccess = () => ok(r.result);
+    r.onerror = () => red(r.error);
+  });
+}
+async function dbAl(k){
+  const db = await dbAc();
+  return new Promise((ok, red) => {
+    const q = db.transaction(DEPO).objectStore(DEPO).get(k);
+    q.onsuccess = () => ok(q.result); q.onerror = () => red(q.error);
+  });
+}
+async function dbYaz(k, v){
+  const db = await dbAc();
+  return new Promise((ok, red) => {
+    const t = db.transaction(DEPO, "readwrite");
+    t.objectStore(DEPO).put(v, k);
+    t.oncomplete = () => ok(); t.onerror = () => red(t.error);
+  });
+}
+
+/* ================= gömülü veri (tek dosya sürümü) ================= */
+const CDN = "https://cdn.jsdelivr.net/npm/js-dos@8.5.3/dist/";
+const GOMULU = !!window.GOMULU_OYUN;
+function b64(s){
+  const ikili = atob(s), u8 = new Uint8Array(ikili.length);
+  for (let i = 0; i < ikili.length; i++) u8[i] = ikili.charCodeAt(i);
+  return u8;
+}
+/* gömülü emülatör: CDN adreslerini dosyanın içindeki kopyalara yönlendir */
+let emuHazir = null;
+function emulatorHazirla(){
+  if (emuHazir) return emuHazir;
+  const E = window.GOMULU_EMU;
+  if (!E) return (emuHazir = Promise.resolve());
+  const harita = {};
+  const tur = { js: "text/javascript", wasm: "application/wasm", css: "text/css" };
+  for (const ad in E){
+    const uz = ad.split(".").pop();
+    harita[CDN + ad] = URL.createObjectURL(new Blob([b64(E[ad])], { type: tur[uz] || "application/octet-stream" }));
+  }
+  const yonlendir = u => (typeof u === "string" && harita[u.split("?")[0]]) || u;
+  const xhrAc = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function(m, u, ...r){ return xhrAc.call(this, m, yonlendir(String(u)), ...r); };
+  const ilkFetch = window.fetch.bind(window);
+  window.fetch = (u, o) => ilkFetch(typeof u === "string" ? yonlendir(u) : u, o);
+  const stil = document.createElement("style");
+  stil.textContent = new TextDecoder().decode(b64(E["js-dos.css"]));
+  document.head.appendChild(stil);
+  const betik = (url, id) => new Promise((ok, red) => {
+    const sc = document.createElement("script");
+    if (id) sc.id = id;
+    sc.src = url; sc.onload = ok; sc.onerror = () => red(new Error("Emülatör yüklenemedi"));
+    document.head.appendChild(sc);
+  });
+  emuHazir = betik(harita[CDN + "js-dos.js"])
+    .then(() => betik(harita[CDN + "emulators/emulators.js"], "emulators-js"))
+    .then(() => { window.emulators.pathPrefix = CDN + "emulators/"; window.emulators.pathSuffix = ""; });
+  return emuHazir;
+}
+
+/* özel bağlantı: #a=<anahtar> ile şifreli oyun.bin açılır (anahtar sitede yok) */
+const ANAHTAR_K = "prens-anahtar";
+function anahtarAl(){
+  const m = location.hash.match(/[#&]a=([A-Za-z0-9_-]{43})/);
+  if (m){ try { localStorage.setItem(ANAHTAR_K, m[1]); } catch(e) {} return m[1]; }
+  try { return localStorage.getItem(ANAHTAR_K); } catch(e) { return null; }
+}
+async function sifreliOyunuAc(anahtar){
+  const yanit = await fetch("oyun.bin", { cache: "no-cache" });
+  if (!yanit.ok) throw new Error("Oyun dosyası sunucuda bulunamadı.");
+  const v = new Uint8Array(await yanit.arrayBuffer());
+  if (String.fromCharCode(...v.subarray(0, 4)) !== "PRN1") throw new Error("Oyun dosyası tanınmadı.");
+  const ham = b64(anahtar.replace(/-/g, "+").replace(/_/g, "/") + "=");
+  const k = await crypto.subtle.importKey("raw", ham, "AES-GCM", false, ["decrypt"]);
+  let zip;
+  try { zip = await crypto.subtle.decrypt({ name: "AES-GCM", iv: v.subarray(4, 16) }, k, v.subarray(16)); }
+  catch(e){ try { localStorage.removeItem(ANAHTAR_K); } catch(_) {} throw new Error("Bağlantıdaki anahtar yanlış."); }
+  return oyunuAyikla(await zipAc(zip));
+}
+
+/* oyun dosyaları: gömülüyse dosyanın içinden, değilse cihazdan, yoksa özel bağlantıdan */
+let gomuluOyun = null;
+async function oyunDosyalari(){
+  if (GOMULU){
+    if (!gomuluOyun) gomuluOyun = { dosyalar: oyunuAyikla(await zipAc(b64(window.GOMULU_OYUN).buffer)) };
+    return gomuluOyun;
+  }
+  let kayitli = null;
+  try { kayitli = await dbAl("oyun"); } catch(e) {}
+  if (kayitli) return kayitli;
+  const anahtar = anahtarAl();
+  if (!anahtar || !window.crypto || !crypto.subtle) return null;
+  durum("Oyun hazırlanıyor…");
+  const dosyalar = await sifreliOyunuAc(anahtar);
+  const kayit = { tarih: Date.now(), dosyalar };
+  try { await dbYaz("oyun", kayit); } catch(e) {}
+  durum("");
+  return kayit;
+}
+
+/* ================= zip okuyucu ================= */
+async function inflateRaw(veri){
+  const ds = new DecompressionStream("deflate-raw");
+  const yanit = new Response(new Blob([veri]).stream().pipeThrough(ds));
+  return new Uint8Array(await yanit.arrayBuffer());
+}
+async function zipAc(buf){
+  const u8 = new Uint8Array(buf), dv = new DataView(buf);
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--)
+    if (dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; }
+  if (eocd < 0) throw new Error("Bu bir zip dosyası değil.");
+  const adet = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+  const cikti = [], td = new TextDecoder("latin1");
+  for (let n = 0; n < adet; n++){
+    if (dv.getUint32(p, true) !== 0x02014b50) throw new Error("Zip dizini bozuk.");
+    const yontem = dv.getUint16(p + 10, true);
+    const sikisik = dv.getUint32(p + 20, true);
+    const adUz = dv.getUint16(p + 28, true), ekUz = dv.getUint16(p + 30, true), notUz = dv.getUint16(p + 32, true);
+    const yerel = dv.getUint32(p + 42, true);
+    const ad = td.decode(u8.subarray(p + 46, p + 46 + adUz));
+    p += 46 + adUz + ekUz + notUz;
+    if (ad.endsWith("/")) continue;
+    const yAdUz = dv.getUint16(yerel + 26, true), yEkUz = dv.getUint16(yerel + 28, true);
+    const bas = yerel + 30 + yAdUz + yEkUz;
+    const ham = u8.subarray(bas, bas + sikisik);
+    let icerik;
+    if (yontem === 0) icerik = ham.slice();
+    else if (yontem === 8) icerik = await inflateRaw(ham);
+    else throw new Error("Desteklenmeyen sıkıştırma: " + ad);
+    cikti.push({ yol: ad, icerik });
+  }
+  return cikti;
+}
+
+/* dosya listesinden oyun klasörünü bul ve kök yap */
+function oyunuAyikla(dosyalar){
+  const exe = dosyalar.find(d => /(^|\/)prince\.exe$/i.test(d.yol));
+  if (!exe) throw new Error("PRINCE.EXE bulunamadı. Doğru zip dosyasını seçtiğinden emin ol.");
+  const onEk = exe.yol.slice(0, exe.yol.length - "prince.exe".length);
+  const secilen = dosyalar
+    .filter(d => d.yol.startsWith(onEk) && !d.yol.slice(onEk.length).includes("/"))
+    .map(d => ({ ad: d.yol.slice(onEk.length).toUpperCase(), icerik: d.icerik }));
+  const gerekli = ["PRINCE.EXE", "KID.DAT", "LEVELS.DAT", "PRINCE.DAT"];
+  const eksik = gerekli.filter(g => !secilen.some(d => d.ad === g));
+  if (eksik.length) throw new Error("Eksik dosya: " + eksik.join(", "));
+  return secilen;
+}
+
+/* ================= giriş ekranı ================= */
+const durum = (m, hata) => { const d = $("#durum"); d.textContent = m || ""; d.classList.toggle("hata", !!hata); };
+
+async function girisGoster(){
+  let kayitli = null;
+  try { kayitli = await oyunDosyalari(); } catch(e) { durum(e.message, true); }
+  $("#degistir").hidden = GOMULU;
+  $("#hazirKutu").hidden = !kayitli;
+  $("#secKutu").hidden = !!kayitli;
+  if (kayitli){
+    let k = null; try { k = await dbAl("kayit"); } catch(e) {}
+    $("#kayitBilgi").textContent = bolumNo(k) ? "Kayıtlı oyun var (" + bolumNo(k) + ". bölüm). Oyunda 📂 Yükle ile devam edebilirsin." : "";
+  }
+}
+
+async function dosyalariKaydet(liste){
+  const oyun = oyunuAyikla(liste);
+  await dbYaz("oyun", { tarih: Date.now(), dosyalar: oyun });
+  durum("Oyun dosyaları bu cihaza kaydedildi (" + oyun.length + " dosya).");
+  await girisGoster();
+}
+
+$("#zipSec").onclick = () => $("#zipInput").click();
+$("#klasorSec").onclick = () => $("#klasorInput").click();
+$("#zipInput").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  try { durum("Zip açılıyor…"); await dosyalariKaydet(await zipAc(await f.arrayBuffer())); }
+  catch(err){ durum(err.message, true); }
+};
+$("#klasorInput").onchange = async e => {
+  const fs = [...e.target.files]; e.target.value = "";
+  if (!fs.length) return;
+  try {
+    durum("Dosyalar okunuyor…");
+    const liste = [];
+    for (const f of fs){
+      const yol = (f.webkitRelativePath || f.name).replace(/\\/g, "/");
+      if (/\.zip$/i.test(f.name) && fs.length === 1){ liste.push(...await zipAc(await f.arrayBuffer())); continue; }
+      liste.push({ yol, icerik: new Uint8Array(await f.arrayBuffer()) });
+    }
+    await dosyalariKaydet(liste);
+  } catch(err){ durum(err.message, true); }
+};
+$("#degistir").onclick = () => { $("#hazirKutu").hidden = true; $("#secKutu").hidden = false; durum(""); };
+$("#basla").onclick = () => oyunuBaslat();
+
+/* ================= emülatör ================= */
+const DOSBOX_CONF = `
+[sdl]
+autolock=false
+[dosbox]
+machine=svga_s3
+memsize=16
+[render]
+aspect=false
+[cpu]
+core=auto
+cputype=auto
+cycles=fixed 10000
+[mixer]
+rate=44100
+[sblaster]
+sbtype=sb16
+irq=7
+dma=1
+[speaker]
+pcspeaker=true
+[autoexec]
+mount c .
+c:
+prince
+`;
+
+let ci = null, dosKontrol = null, kayitZamanlayici = null, sonKayit = null;
+
+async function oyunuBaslat(){
+  const kayitli = await oyunDosyalari();
+  try { await emulatorHazirla(); } catch(e){ durum(e.message, true); return; }
+  if (!kayitli){ girisGoster(); return; }
+  const initFs = kayitli.dosyalar.map(d => ({ path: d.ad, contents: d.icerik }));
+  const kayit = await dbAl("kayit").catch(() => null);
+  if (kayit){
+    const i = initFs.findIndex(d => d.path === "PRINCE.SAV");
+    if (i >= 0) initFs.splice(i, 1);
+    initFs.push({ path: "PRINCE.SAV", contents: kayit });
+    sonKayit = kayit;
+  }
+  $("#giris").style.display = "none";
+  $("#oyun").classList.add("acik");
+  dosKontrol = Dos($("#dos"), {
+    dosboxConf: DOSBOX_CONF,
+    initFs,
+    pathPrefix: "https://cdn.jsdelivr.net/npm/js-dos@8.5.3/dist/emulators/",
+    autoStart: true,
+    kiosk: true,
+    noCloud: true,
+    mouseCapture: false,
+    renderAspect: "4/3",   /* oran tarayıcıda; DOSBox aspect=true eski satırları ekranda bırakıyordu */
+    theme: "dark",
+    lang: "en",
+    onEvent: (olay, arg) => {
+      if (olay === "ci-ready"){ ci = arg; window.__prens.ci = arg; kayitIzle(); }
+    },
+  });
+}
+
+/* kayıt dosyasını izle ve cihazda sakla */
+function ayni(a, b){
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+async function kayitKontrol(sessiz){
+  if (!ci) return false;
+  try {
+    const v = await ci.fsReadFile("PRINCE.SAV");
+    if (v && v.length && !ayni(v, sonKayit)){
+      const ilk = !sonKayit;
+      sonKayit = v.slice();
+      await dbYaz("kayit", sonKayit);
+      if (!ilk && !sessiz) bildir("💾 Kaydedildi: " + bolumNo(sonKayit) + ". bölüm");
+      return !ilk;
+    }
+  } catch(e) {}
+  return false;
+}
+function kayitIzle(){
+  clearInterval(kayitZamanlayici);
+  kayitZamanlayici = setInterval(() => { if (!kayitIslem) kayitKontrol(); }, 4000);
+}
+document.addEventListener("visibilitychange", () => { if (document.hidden) kayitKontrol(); });
+
+let bildirimZ = 0;
+function bildir(m, sure){
+  const b = $("#bildirim"); b.textContent = m; b.classList.add("goster");
+  clearTimeout(bildirimZ); bildirimZ = setTimeout(() => b.classList.remove("goster"), sure || 2200);
+}
+const bolumNo = v => (v && v.length >= 6) ? (v[4] | (v[5] << 8)) : 0;   /* PRINCE.SAV: dakika, tik, bölüm, can */
+
+/* ================= tuşlar ================= */
+const KOD = { left:263, right:262, up:265, down:264, shift:340, ctrl:341, esc:256, enter:257, space:32 };
+const basiliSay = {};
+function tus(ad, basili){
+  if (!ci) return;
+  const kod = typeof ad === "number" ? ad : KOD[ad];
+  const n = basiliSay[kod] || 0;
+  if (basili){ basiliSay[kod] = n + 1; if (n === 0) ci.sendKeyEvent(kod, true); }
+  else if (n > 0){ basiliSay[kod] = n - 1; if (n === 1) ci.sendKeyEvent(kod, false); }
+}
+function vurus(...adlar){
+  adlar.forEach(a => tus(a, true));
+  setTimeout(() => adlar.slice().reverse().forEach(a => tus(a, false)), 90);
+}
+
+document.querySelectorAll("#ustBar [data-tus]").forEach(b => {
+  b.addEventListener("click", () => vurus(b.dataset.tus));
+});
+const bekle = ms => new Promise(r => setTimeout(r, ms));
+let kayitIslem = false;
+async function kaydet(){
+  if (!ci || kayitIslem) return;
+  kayitIslem = true;
+  await kayitKontrol(true);
+  const onceki = sonKayit;
+  vurus("ctrl", 71);                       /* Ctrl+G */
+  let oldu = false;
+  for (let i = 0; i < 6 && !oldu; i++){ await bekle(500); await kayitKontrol(true); oldu = !!sonKayit && !ayni(sonKayit, onceki); }
+  kayitIslem = false;
+  if (oldu) bildir("💾 Kaydedildi: " + bolumNo(sonKayit) + ". bölüm", 3000);
+  else bildir("Kaydedilmedi. Oyun 3. bölümden itibaren kayıt alır.", 4500);
+}
+async function yukle(){
+  if (!ci || kayitIslem) return;
+  await kayitKontrol(true);
+  if (!sonKayit || !bolumNo(sonKayit)){ bildir("Kayıtlı oyun yok.", 3000); return; }
+  kayitIslem = true;
+  bildir("📂 " + bolumNo(sonKayit) + ". bölüm yükleniyor…", 3000);
+  vurus("ctrl", 82);                       /* Ctrl+R: başlık ekranına dön */
+  await bekle(2500);
+  vurus("ctrl", 76);                       /* Ctrl+L: kaydı yükle */
+  await bekle(1500);
+  kayitIslem = false;
+  bildir("Önce iksir sorusu gelir: bir tuşa bas, 📜 Kodlar'dan harfi bul ve o iksiri iç.", 7000);
+}
+document.querySelectorAll("#ustBar [data-kombo]").forEach(b => {
+  b.addEventListener("click", () => {
+    const [m, h] = b.dataset.kombo.split("+");
+    if (h === "g") return kaydet();
+    if (h === "l") return yukle();
+    vurus(m, h.toUpperCase().charCodeAt(0));
+  });
+});
+
+/* yön pedi: parmağın altındaki hücre, kaydırınca değişir */
+const YON_TUS = { u:["up"], d:["down"], l:["left"], r:["right"], ul:["up","left"], ur:["up","right"], dl:["down","left"], dr:["down","right"], "":[] };
+const parmaklar = new Map();   // pointerId -> {yon, el}
+function yonAyarla(id, el){
+  const eski = parmaklar.get(id);
+  const yeni = el ? el.dataset.yon : null;
+  if (eski && eski.yon === yeni) return;
+  if (eski){ YON_TUS[eski.yon].forEach(t => tus(t, false)); eski.el.classList.remove("basili"); }
+  if (yeni === null || yeni === undefined){ parmaklar.delete(id); return; }
+  YON_TUS[yeni].forEach(t => tus(t, true));
+  el.classList.add("basili");
+  parmaklar.set(id, { yon: yeni, el });
+}
+function hucre(x, y){
+  const el = document.elementFromPoint(x, y);
+  return el && el.closest ? el.closest("#yonPad .tus") : null;
+}
+const yp = $("#yonPad");
+yp.addEventListener("pointerdown", e => {
+  e.preventDefault();
+  yp.setPointerCapture(e.pointerId);
+  yonAyarla(e.pointerId, hucre(e.clientX, e.clientY));
+});
+yp.addEventListener("pointermove", e => {
+  if (!parmaklar.has(e.pointerId)) return;
+  const h = hucre(e.clientX, e.clientY);
+  if (h) yonAyarla(e.pointerId, h);
+});
+const yonBirak = e => yonAyarla(e.pointerId, null);
+yp.addEventListener("pointerup", yonBirak);
+yp.addEventListener("pointercancel", yonBirak);
+yp.addEventListener("lostpointercapture", yonBirak);
+
+/* basılı tutulan eylem tuşları */
+function tutTusu(el, tuslar){
+  const aktif = new Set();
+  el.addEventListener("pointerdown", e => {
+    e.preventDefault(); el.setPointerCapture(e.pointerId);
+    if (!aktif.size){ tuslar.forEach(t => tus(t, true)); el.classList.add("basili"); }
+    aktif.add(e.pointerId);
+  });
+  const birak = e => {
+    if (!aktif.delete(e.pointerId)) return;
+    if (!aktif.size){ tuslar.forEach(t => tus(t, false)); el.classList.remove("basili"); }
+  };
+  el.addEventListener("pointerup", birak);
+  el.addEventListener("pointercancel", birak);
+  el.addEventListener("lostpointercapture", birak);
+}
+tutTusu($("#tusShift"), ["shift"]);
+tutTusu($("#tusYuru"), ["shift"]);
+document.querySelectorAll(".pad").forEach(p => p.addEventListener("contextmenu", e => e.preventDefault()));
+
+/* dokunmatik düzen */
+const DOKUN_ANAHTAR = "prens-dokunmatik";
+function dokunmatikAyarla(acik){
+  document.body.classList.toggle("dokunmatik", acik);
+  $("#bDokun").classList.toggle("basili", acik);
+  try { localStorage.setItem(DOKUN_ANAHTAR, acik ? "1" : "0"); } catch(e) {}
+  setTimeout(() => window.dispatchEvent(new Event("resize")), 50);
+}
+let dokunBaslangic = matchMedia("(pointer:coarse)").matches || navigator.maxTouchPoints > 0;
+try { const s = localStorage.getItem(DOKUN_ANAHTAR); if (s !== null) dokunBaslangic = s === "1"; } catch(e) {}
+dokunmatikAyarla(dokunBaslangic);
+$("#bDokun").onclick = () => dokunmatikAyarla(!document.body.classList.contains("dokunmatik"));
+
+$("#bTam").onclick = () => {
+  const el = document.documentElement;
+  if (document.fullscreenElement) document.exitFullscreen?.();
+  else (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el).then?.(() => {
+    try { screen.orientation.lock("landscape").catch(() => {}); } catch(e) {}
+  }).catch?.(() => {});
+};
+
+$("#bGeri").onclick = async () => {
+  await kayitKontrol();
+  clearInterval(kayitZamanlayici);
+  try { await dosKontrol?.stop?.(); } catch(e) {}
+  location.reload();
+};
+
+/* üst çubuk düğmeleri klavye odağını almasın (Boşluk/Enter düğmeye gitmesin) */
+document.querySelectorAll("#ustBar button").forEach(b => {
+  b.tabIndex = -1;
+  b.addEventListener("mousedown", e => e.preventDefault());
+});
+
+/* kılavuz kodları: oyuncunun kendi TIPS.TXT dosyası */
+async function kodlariHazirla(){
+  try {
+    const k = await oyunDosyalari();
+    const f = k && k.dosyalar.find(d => d.ad === "TIPS.TXT");
+    if (!f) return;
+    let metin = new TextDecoder("windows-1252").decode(f.icerik);
+    $("#kodMetin").textContent = metin.replace(/\r/g, "");
+    $("#bKod").hidden = false;
+  } catch(e) {}
+}
+$("#bKod").onclick = () => { $("#kodPencere").hidden = !$("#kodPencere").hidden; };
+$("#kodKapat").onclick = () => { $("#kodPencere").hidden = true; };
+kodlariHazirla();
+
+/* test için */
+window.__prens = { zipAc, oyunuAyikla, dosyalariKaydet, dbAl, tus, vurus, ci: null };
+
+girisGoster();
+})();
+</script>
+</body>
+</html>
